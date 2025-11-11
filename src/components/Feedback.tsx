@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "../common/main.css";
 import "../common/feedback.css";
 import { useTranslation } from "react-i18next";
+import { createForm } from "../services/home-api";
 
 export default function Feedback() {
     const [selectedMood, setSelectedMood] = useState<number | null>(null);
@@ -11,7 +12,7 @@ export default function Feedback() {
         comment: "",
     });
 
-    const {t} = useTranslation();
+    const { t } = useTranslation();
 
     const moods = [
         { id: 1, emoji: "😩", label: t("verybad") },
@@ -21,22 +22,83 @@ export default function Feedback() {
         { id: 5, emoji: "😁", label: t("excellent") },
     ];
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = async (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.name || !formData.email || !selectedMood) {
             alert("Please fill in all required fields.");
             return;
         }
-        alert(
-            `Name: ${formData.name}\nEmail: ${formData.email}\nMood: ${moods.find((m) => m.id === selectedMood)?.label
-            }\nComment: ${formData.comment}`
-        );
+
+        const body = {
+            name: formData.name,
+            email: formData.email,
+            reaction: moods.find(mood => mood.id === selectedMood)?.label || "",
+            comment: formData.comment,
+        }
+
+        try {
+            await createForm(body)
+            alert("Feedback sent!")
+        } catch (error) {
+            alert("Server Error! Please try again later.")
+        } finally {
+            setFormData({
+                name: "",
+                email: "",
+                comment: "",
+            });
+            setSelectedMood(null);
+        }
     };
+
+    const handleMoodClick = (moodId: number, event: React.MouseEvent) => {
+        setSelectedMood(moodId);
+        const emoji = moods.find((m) => m.id === moodId)?.emoji || "😊";
+
+        createFloatingEmojis(event.clientX, event.clientY, emoji);
+    };
+
+    const createFloatingEmojis = (x: number, y: number, emoji: string) => {
+        for (let i = 0; i < 6; i++) {
+            const span = document.createElement("span");
+            span.textContent = emoji;
+            span.className = "floating-emoji";
+
+            // random start position near click
+            span.style.left = `${x + (Math.random() - 0.5) * 50}px`;
+            span.style.top = `${y + (Math.random() - 0.5) * 20}px`;
+
+            document.body.appendChild(span);
+
+            const translateY = -(Math.random() * 200 + 150);
+            const translateX = (Math.random() - 0.5) * 80;
+            const rotate = (Math.random() - 0.5) * 60;
+
+            const animation = span.animate(
+                [
+                    { transform: "translate(0, 0) scale(1)", opacity: 1 },
+                    {
+                        transform: `translate(${translateX}px, ${translateY}px) rotate(${rotate}deg) scale(1.2)`,
+                        opacity: 0,
+                    },
+                ],
+                {
+                    duration: 2000 + Math.random() * 800,
+                    easing: "ease-out",
+                    fill: "forwards",
+                }
+            );
+
+            animation.onfinish = () => span.remove();
+        }
+    };
+
+
 
     return (
         <div className="feedback-outer">
@@ -48,7 +110,7 @@ export default function Feedback() {
             <div className="feedback-inner">
                 <div className="feedback-form-card">
                     <h2 className="feedback-title" data-aos="fade-up">{t("feeling")}</h2>
-                    <p className="feedback-subtitle" data-aos="fade-up" data-aos-delay="100">
+                    <p className="feedback-subtitle" data-aos="fade-up">
                         {t("feelingSub")}
                     </p>
 
@@ -61,7 +123,7 @@ export default function Feedback() {
                             value={formData.name}
                             onChange={handleChange}
                             required
-                            data-aos="fade-up" data-aos-delay="200"
+                            data-aos="fade-up"
                         />
 
                         <input
@@ -75,16 +137,16 @@ export default function Feedback() {
                             data-aos="fade-up" data-aos-delay="300"
                         />
 
-                        <div className="mood-container" data-aos="zoom-in" data-aos-delay="400">
+                        <div className="mood-container" data-aos="zoom-in">
                             {moods.map((mood) => (
                                 <div
                                     key={mood.id}
                                     className={`mood-icon ${selectedMood === mood.id ? "active" : ""
                                         }`}
-                                    onClick={() => setSelectedMood(mood.id)}
+                                    onClick={(event) => handleMoodClick(mood.id, event)}
                                 >
                                     <span>{mood.emoji}</span>
-                                    <p>{mood.label}</p>
+                                    {/* <p >{mood.label}</p> */}
                                 </div>
                             ))}
                         </div>
@@ -95,7 +157,7 @@ export default function Feedback() {
                             className="feedback-comment"
                             value={formData.comment}
                             onChange={handleChange}
-                            data-aos="zoom-in" data-aos-delay="300"
+                            data-aos="zoom-in"
                         />
 
                         <button type="submit" className="feedback-submit">

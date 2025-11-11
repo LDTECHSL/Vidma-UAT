@@ -11,10 +11,23 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Collapse from "@mui/material/Collapse";
 import {
+    CollectionsTwoTone,
+    ConnectWithoutContactTwoTone,
+    DesignServicesTwoTone,
+    DomainVerificationTwoTone,
+    EmojiEventsTwoTone,
     ExpandLess,
     ExpandMore,
+    FeedbackTwoTone,
+    GroupsTwoTone,
+    HomeWorkTwoTone,
+    InfoTwoTone,
+    LocalGroceryStoreTwoTone,
+    MovieTwoTone,
     PowerSettingsNewTwoTone,
+    QueryStatsTwoTone,
     RocketLaunchTwoTone,
+    StorefrontTwoTone,
 } from "@mui/icons-material";
 import { } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -24,6 +37,7 @@ import {
     RightCircleTwoTone,
 } from "@ant-design/icons";
 import { IconButton, Typography, useMediaQuery } from "@mui/material";
+import useIdleTimer from "../components/IdleTimer";
 
 const drawerWidth = 230;
 
@@ -103,11 +117,23 @@ export default function Navbar({ children }: Readonly<Props>) {
     const handleOpen = () => setMobileOpen(true);
     const handleClose = () => setMobileOpen(false);
 
+    const token = sessionStorage.getItem("vidmaAuthToken") || "";
+
     const handleLogout = () => {
-        // Perform logout logic here
         sessionStorage.removeItem("vidmaAuthToken");
         navigate("/console/login");
     };
+
+    useIdleTimer({
+        timeout: 600000,
+        onIdle: handleLogout,
+    });
+
+    React.useEffect(() => {
+        if (token === "") {
+            navigate("/console/login");
+        }
+    }, []);
 
     const drawerItems: NavItem[] = [
         {
@@ -118,9 +144,81 @@ export default function Navbar({ children }: Readonly<Props>) {
         },
         {
             group: "Contents",
+            name: "About Us Section",
+            icon: <InfoTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/aboutus-section",
+        },
+        {
+            group: "Contents",
+            name: "Services Section",
+            icon: <DesignServicesTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/services-section",
+        },
+        {
+            group: "Contents",
+            name: "Top Products Section",
+            icon: <DomainVerificationTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/top-products-section",
+        },
+        {
+            group: "Contents",
             name: "Contact Us Section",
-            icon: <RocketLaunchTwoTone style={{ fontSize: "18px" }} />,
+            icon: <ConnectWithoutContactTwoTone style={{ fontSize: "18px" }} />,
             path: "/vidma/console/contactus-section",
+        },
+        {
+            group: "Contents",
+            name: "Showrooms Section",
+            icon: <HomeWorkTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/showrooms-section",
+        },
+        {
+            group: "Contents",
+            name: "Video Section",
+            icon: <MovieTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/video-section",
+        },
+        {
+            group: "Contents",
+            name: "Gallery Section",
+            icon: <CollectionsTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/gallery-section",
+        },
+        {
+            group: "Contents",
+            name: "Awards Section",
+            icon: <EmojiEventsTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/awards-section",
+        },
+        {
+            group: "Contents",
+            name: "Teams Section",
+            icon: <GroupsTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/teams-section",
+        },
+        {
+            group: "Contents",
+            name: "Stats Section",
+            icon: <QueryStatsTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/stats-section",
+        },
+        {
+            group: "Reviews",
+            name: "Feedbacks",
+            icon: <FeedbackTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/feedbacks-section",
+        },
+        {
+            group: "Market",
+            name: "MarketPlace",
+            icon: <StorefrontTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/marketplace-section",
+        },
+        {
+            group: "Market",
+            name: "Orders",
+            icon: <LocalGroceryStoreTwoTone style={{ fontSize: "18px" }} />,
+            path: "/vidma/console/orders-section",
         }
     ];
 

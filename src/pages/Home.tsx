@@ -15,16 +15,39 @@ import Reviews from "../components/Reviews";
 import Stats from "../components/Stats";
 import { getContactUsData, getHeroData } from "../services/home-api";
 import { FacebookFilled, TikTokOutlined, WhatsAppOutlined } from "@ant-design/icons";
+import Splash from "../components/Splash";
+import "../common/main.css";
 
 export default function Home() {
   const [slides, setSlides] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [contactDetails, setContactDetails] = useState<any>({});
   const { language } = useLanguage();
+  const [showGoTop, setShowGoTop] = useState(false);
 
   useEffect(() => {
     fetchHeroDetails();
   }, [language]);
+
+const [scrollProgress, setScrollProgress] = useState(0);
+
+// Modify your scroll listener to update progress
+useEffect(() => {
+  const handleScroll = () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrolled = (scrollTop / docHeight) * 100;
+    setScrollProgress(scrolled);
+    setShowGoTop(scrollTop > 300);
+  };
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+}, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const fetchHeroDetails = async () => {
     try {
@@ -49,6 +72,24 @@ export default function Home() {
     handleGetContactDetails();
   }, []);
 
+  // Image preloading effect
+  useEffect(() => {
+    if (slides.length > 0) {
+      const preloadImage = (index: number) => {
+        const img = new Image();
+        img.src = slides[index].image.replace("dl=0", "raw=1");
+      };
+
+      // Preload next image
+      const nextIndex = (currentIndex + 1) % slides.length;
+      preloadImage(nextIndex);
+
+      // Preload previous image
+      const prevIndex = currentIndex === 0 ? slides.length - 1 : currentIndex - 1;
+      preloadImage(prevIndex);
+    }
+  }, [currentIndex, slides]);
+
   useEffect(() => {
     if (slides.length > 0) {
       const interval = setInterval(() => {
@@ -62,6 +103,7 @@ export default function Home() {
 
   return (
     <Main>
+      <Splash />
       {/* Hero Section */}
       <div className="relative w-full h-[80vh] sm:h-[70vh] xs:h-[60vh] overflow-hidden home-outer mt-5">
         {slides.map((slide, index) => (
@@ -73,11 +115,12 @@ export default function Home() {
             <img
               src={slide.image.replace("dl=0", "raw=1")}
               alt={slide.title}
+              loading={index === 0 ? "eager" : "lazy"}
               className="w-full h-full object-cover"
             />
 
             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-center p-4">
-              <h1 className="text-white text-2xl md:text-4xl font-bold mt-5 mb-5 drop-shadow-lg max-w-[800px]">
+              <h1 className="text-white text-2xl md:text-2xl font-bold mt-5 mb-5 drop-shadow-lg max-w-[800px]">
                 {slide.title}
               </h1>
               <p className="text-white text-base md:text-md mt-5 mb-5 max-w-[700px] drop-shadow-md">
@@ -97,7 +140,7 @@ export default function Home() {
                 </a>
 
                 <a
-                  href="https://wa.me/94775353762?text=Hello"
+                  href={contactDetails.whatsappLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="button"
@@ -159,12 +202,10 @@ export default function Home() {
         <Products />
       </div>
 
-      <div id="contact">
-        <ContactUs />
-      </div>
+      <div id="contact"><ContactUs /> </div>
 
       <VideoSlider />
-      <div id="projects">
+      <div id="gallery">
         <ProjectsGallery />
       </div>
 
@@ -173,6 +214,25 @@ export default function Home() {
       <Team />
       <Reviews />
       <Stats />
+
+      {showGoTop && (
+  <button onClick={scrollToTop} className="go-top-btn" aria-label="Go to top">
+    <svg className="progress-ring" width="60" height="60">
+      <circle
+        className="progress-ring__circle"
+        cx="30"
+        cy="30"
+        r="25"
+        style={{
+          strokeDashoffset: 157 - (157 * scrollProgress) / 100, // 157 = 2 * π * 25
+        }}
+      />
+    </svg>
+    <span className="arrow">↑</span>
+  </button>
+)}
+
+
     </Main>
   );
 }
